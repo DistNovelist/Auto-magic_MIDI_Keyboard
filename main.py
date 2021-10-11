@@ -173,7 +173,7 @@ def main():
 
     c = Canvas(frame,width=723,height=100)
     c.configure(bg=COLOR_TABLE[1], highlightthickness=0)
-    c.grid(columnspan=5,row=0,column=0)
+    c.grid(columnspan=6,row=0,column=0)
 
     pressing_key = 0
     def click(event):
@@ -227,6 +227,7 @@ def main():
 
     vels = ttk.Scale(frame,variable=velocity,value=velocity,orient=HORIZONTAL,length=127,from_=0,to=127,command=lambda v: SetVel(v))
     vels.grid(row=1, column=4)
+    label3.grid(row=1,column=5)
     
     label4 = ttk.Label(frame, text="Base Note:")
     label4.grid(row=2,column=0)
@@ -255,7 +256,7 @@ def main():
         allMidiKeyRelease()
         keynum2midinum = scales[scalename]
     cbSc.bind('<<ComboboxSelected>>', lambda e: changeScale(cbSc_v.get()))
-    cbSc.grid(row=2, column=4)
+    cbSc.grid(row=2, column=4,columnspan=2)
 
 
 
