@@ -7,32 +7,24 @@ import tkinter.ttk as ttk
 import os
 import math
 notename = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
+noteoct = ["-1","0","1","2","3","4","5","6","7"]
 keynum2midinum = [0, 2, 4, 5, 7, 9, 11]
 pressedMidiKey=[]
 keyprocEndFlag = False
 midiOutChangeFlag = False
 velocity = 100
+baseNote = 48
 
 def keypress(n,deltaOct):
     global velocity
+    global baseNote
     print("velocity: " + str(velocity))
-    midikeypress(keynum2midinum[n]+12*deltaOct+60, velocity)
-    """global pressedMidiKey
-    global keynum2midinum
-    note_n = keynum2midinum[n]+12*deltaOct+60
-    if (note_n in pressedMidiKey) == False:
-        global velocity
-        midikeyrelease(note_n)
-        midikeypress(note_n, velocity)
-        pressedMidiKey.append(note_n)"""
+    midikeypress(keynum2midinum[n]+12*deltaOct+baseNote, velocity)
+
 def keyrelease(n,deltaOct):
-    midikeyrelease(keynum2midinum[n]+12*deltaOct+60)
-    """global pressedMidiKey
-    global keynum2midinum
-    note_n = keynum2midinum[n]+12*deltaOct+60
-    if note_n in pressedMidiKey:
-        midikeyrelease(note_n)
-        pressedMidiKey.remove(note_n)"""
+    global baseNote
+    midikeyrelease(keynum2midinum[n]+12*deltaOct+baseNote)
+
 def keyprocess():
     global keyprocEndFlag
     global midiOutChangeFlag
@@ -68,18 +60,26 @@ def keyprocess():
     
 
 def midikeypress(i,vel):
+    global pressedMidiKey
     if (i in pressedMidiKey) == False and midiOutChangeFlag == False:
         global midiout
         midiout.note_on(i, vel)
         pressedMidiKey.append(i)
 
 def midikeyrelease(i):
+    global pressedMidiKey
     if i in pressedMidiKey and midiOutChangeFlag == False:
         global midiout
         midiout.note_off(i)
         pressedMidiKey.remove(i)
-def changeMidiOutPort(portNum):
+
+def allMidiKeyRelease():
+    global pressedMidiKey
     i_num = m.get_count()
+    for i in pressedMidiKey:
+        midikeyrelease(i)
+
+def changeMidiOutPort(portNum):
     for i in range(i_num):
         #print(i)
         #print(m.get_device_info(i))
@@ -88,6 +88,7 @@ def changeMidiOutPort(portNum):
     global midiout
     global midioutID
     global midiOutChangeFlag
+    global pressedMidiKey
     for i in pressedMidiKey:
         midikeyrelease(i)
     midiout.close()
@@ -164,7 +165,7 @@ def main():
 
     c = Canvas(frame,width=723,height=100)
     c.configure(bg=COLOR_TABLE[1], highlightthickness=0)
-    c.grid(columnspan=3,row=0,column=0)
+    c.grid(columnspan=5,row=0,column=0)
 
     pressing_key = 0
     def click(event):
@@ -205,7 +206,7 @@ def main():
     cb.grid(row=1, column=1, columnspan=2)
 
     label2 = ttk.Label(frame, text="Velocity:")
-    label2.grid(row=2,column=0)
+    label2.grid(row=1,column=3)
 
     global velocity
     velText = StringVar()
@@ -217,19 +218,24 @@ def main():
         velText.set(str(velocity))
 
     vels = ttk.Scale(frame,variable=velocity,value=velocity,orient=HORIZONTAL,length=127,from_=0,to=127,command=lambda v: SetVel(v))
-    vels.grid(row=2, column=1)
-    label3.grid(row=2,column=2)
-    def midi_dev_log():
-        global midiout
-        m.init()
-        print(m.get_init())
-        print(midiout)
-        i_num = m.get_count()
-        for i in range(i_num):
-            print(m.get_device_info(i))
-    debug_button=ttk.Button(frame,text="Show Midi Devices Information")
-    debug_button.bind('<Button-1>',lambda e:midi_dev_log())
-    debug_button.grid(row=3,column=1)
+    vels.grid(row=1, column=4)
+    
+    label1 = ttk.Label(frame, text="Base Note:")
+    label1.grid(row=2,column=0)
+    cbBN1_v=StringVar()
+    cbBN1 = ttk.Combobox(frame, textvariable=cbBN1_v, values=notename, width=5, state="readonly")
+    cbBN1.set(notename[0])
+    cbBN2_v=StringVar()
+    cbBN2 = ttk.Combobox(frame, textvariable=cbBN2_v, values=noteoct, width=5, state="readonly")
+    cbBN2.set(noteoct[0])
+    def setBN():
+        allMidiKeyRelease()
+        global baseNote
+        baseNote = notename.index(cbBN1.get()) + 12*(int(cbBN2.get())+1)
+    cbBN1.bind('<<ComboboxSelected>>', lambda e: setBN())
+    cbBN2.bind('<<ComboboxSelected>>', lambda e: setBN())
+    cbBN1.grid(row=2, column=1)
+    cbBN2.grid(row=2, column=2)
 
 
 
