@@ -81,7 +81,9 @@ def midikeypress(i,vel):
         if i - (baseNote//12)*12< 37 and i - (baseNote//12)*12> -1:
             global c
             global black_keys
-            if i % 12 in black_keys:
+            if i == baseNote+12:
+                c.itemconfig(str(13+baseNote%12), fill=COLOR_TABLE[7])
+            elif i % 12 in black_keys:
                 c.itemconfig(str(i - (baseNote//12)*12+1),fill=COLOR_TABLE[5])
             else:
                 c.itemconfig(str(i - (baseNote//12)*12+1),fill=COLOR_TABLE[4])
@@ -96,7 +98,9 @@ def midikeyrelease(i):
         if i - (baseNote//12)*12< 37 and i - (baseNote//12)*12> -1:
             global c
             global black_keys
-            if i % 12 in black_keys:
+            if i == baseNote+12:
+                c.itemconfig(str(13+baseNote%12), fill=COLOR_TABLE[6])
+            elif i % 12 in black_keys:
                 c.itemconfig(str(i - (baseNote//12)*12+1),fill=COLOR_TABLE[3])
             else:
                 c.itemconfig(str(i - (baseNote//12)*12+1),fill=COLOR_TABLE[2])
@@ -134,8 +138,14 @@ def setKeyOutline():
             c.itemconfig(str(i), width=2, outline="red")
         else:
             c.itemconfig(str(i), width=0)
+        if i == 13 + baseNote % 12:
+            c.itemconfig(str(i), fill=COLOR_TABLE[6])
+        elif (i-1) % 12 in black_keys:
+            c.itemconfig(str(i),fill=COLOR_TABLE[3])
+        else:
+            c.itemconfig(str(i),fill=COLOR_TABLE[2])
 
-COLOR_TABLE = ("light gray","gray","white","gray15","gray80","gray40")
+COLOR_TABLE = ("light gray","gray","white","gray15","gray80","gray40","light salmon","brown")
 midiout = None
 midioutID = None
 midi_devices = []
