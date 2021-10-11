@@ -21,7 +21,9 @@ pressedMidiKey=[]
 keyprocEndFlag = False
 midiOutChangeFlag = False
 velocity = 100
-baseNote = 48
+baseNote = 60
+c=None
+black_keys = (1,3,6,8,10)
 
 def keypress(n,deltaOct):
     global velocity
@@ -73,6 +75,14 @@ def midikeypress(i,vel):
         global midiout
         midiout.note_on(i, vel)
         pressedMidiKey.append(i)
+        if i - (baseNote//12)*12 < 37 and i - (baseNote//12)*12 > -1:
+            global c
+            global black_keys
+            if i % 12 in black_keys:
+                c.itemconfig(str(i - (baseNote//12)*12+1),fill=COLOR_TABLE[5])
+            else:
+                c.itemconfig(str(i - (baseNote//12)*12+1),fill=COLOR_TABLE[4])
+
 
 def midikeyrelease(i):
     global pressedMidiKey
@@ -80,6 +90,13 @@ def midikeyrelease(i):
         global midiout
         midiout.note_off(i)
         pressedMidiKey.remove(i)
+        if i - (baseNote//12)*12 < 37 and i - (baseNote//12)*12 > -1:
+            global c
+            global black_keys
+            if i % 12 in black_keys:
+                c.itemconfig(str(i - (baseNote//12)*12+1),fill=COLOR_TABLE[3])
+            else:
+                c.itemconfig(str(i - (baseNote//12)*12+1),fill=COLOR_TABLE[2])
 
 def allMidiKeyRelease():
     global pressedMidiKey
@@ -104,7 +121,17 @@ def changeMidiOutPort(portNum):
     midioutID = portNum
     midiOutChangeFlag = True
 
-COLOR_TABLE = ("light gray","gray","white","gray15")
+def setKeyOutline():
+    global keynum2midinum
+    global c
+    global baseNote
+    for i in range(1,37):
+        if (i-baseNote-1)%12 in keynum2midinum:
+            c.itemconfig(str(i), width=2, outline="red")
+        else:
+            c.itemconfig(str(i), width=0)
+
+COLOR_TABLE = ("light gray","gray","white","gray15","gray80","gray40")
 midiout = None
 midioutID = None
 midi_devices = []
@@ -170,8 +197,8 @@ def main():
     frame = ttk.Frame(tk)
     frame.grid()
 
-
-    c = Canvas(frame,width=723,height=100)
+    global c
+    c = Canvas(frame,width=723,height=50)
     c.configure(bg=COLOR_TABLE[1], highlightthickness=0)
     c.grid(columnspan=6,row=0,column=0)
 
@@ -182,9 +209,10 @@ def main():
         ]
         print(clicked)
         global pressing_key
+        global velocity
         if clicked:
-            pressing_key = int(c.gettags(clicked[0])[0])
-            midikeypress(pressing_key,100)
+            pressing_key = int(c.gettags(clicked[0])[0])+baseNote
+            midikeypress(pressing_key,velocity)
             return
     def release(event):
         global pressing_key
@@ -192,14 +220,14 @@ def main():
             midikeyrelease(pressing_key)
             pressing_key = 0
 
+    global baseNote
 
-
-    black_keys = (1,3,6,8,10)
+    global black_keys
     for i in range(36):
         if i%12 in black_keys:
-            k = c.create_rectangle(i*20+4,98,i*20+22,0, outline="", fill=COLOR_TABLE[3],tag=str(i+48))
+            k = c.create_rectangle(i*20+4,48,i*20+22,0, outline="", fill=COLOR_TABLE[3],tag=str(i))
         else:
-            k = c.create_rectangle(i*20+4,98,i*20+22,0, outline="",fill=COLOR_TABLE[2],tag=str(i+48))
+            k = c.create_rectangle(i*20+4,48,i*20+22,0, outline="",fill=COLOR_TABLE[2],tag=str(i))
         #print(k)
         #print(c.gettags(k))
     c.bind('<Button-1>',click)
@@ -241,6 +269,7 @@ def main():
         allMidiKeyRelease()
         global baseNote
         baseNote = notename.index(cbBN1.get()) + 12*(int(cbBN2.get())+1)
+        setKeyOutline()
     cbBN1.bind('<<ComboboxSelected>>', lambda e: setBN())
     cbBN2.bind('<<ComboboxSelected>>', lambda e: setBN())
     cbBN1.grid(row=2, column=1)
@@ -252,9 +281,11 @@ def main():
     cbSc = ttk.Combobox(frame, textvariable=cbSc_v, values=scaleNames, width=30, state="readonly")
     cbSc.set(scaleNames[0])
     def changeScale(scalename):
-        global keynum2midinum
         allMidiKeyRelease()
+        global keynum2midinum
         keynum2midinum = scales[scalename]
+        setKeyOutline()
+    changeScale(cbSc_v.get())
     cbSc.bind('<<ComboboxSelected>>', lambda e: changeScale(cbSc_v.get()))
     cbSc.grid(row=2, column=4,columnspan=2)
 
