@@ -2,17 +2,20 @@ import pygame.midi as m
 import time
 import keyboard as key
 import threading
-import tkinter
+from tkinter import *
 import tkinter.ttk as ttk
 import os
+import math
 notename = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
 keynum2midinum = [0, 2, 4, 5, 7, 9, 11]
 pressedMidiKey=[]
 keyprocEndFlag = False
+midiOutChangeFlag = False
 velocity = 100
 
 def keypress(n,deltaOct):
     global velocity
+    print("velocity: " + str(velocity))
     midikeypress(keynum2midinum[n]+12*deltaOct+60, velocity)
     """global pressedMidiKey
     global keynum2midinum
@@ -32,6 +35,8 @@ def keyrelease(n,deltaOct):
         pressedMidiKey.remove(note_n)"""
 def keyprocess():
     global keyprocEndFlag
+    global midiOutChangeFlag
+    global midiout
     global keynum2midinum
     key_list1 = ["z","x","c","v","b","n","m",",",".","/","_"]
     key_list2 = ["a","s","d","f","g","h","j","k","l",";",":","]"]
@@ -47,26 +52,60 @@ def keyprocess():
     for k in key_list3:
         key.on_press_key(k, lambda c: keypress(key_list3.index(c.name)%len(keynum2midinum), key_list3.index(c.name)//len(keynum2midinum)+2))
         key.on_release_key(k, lambda c: keyrelease(key_list3.index(c.name)%len(keynum2midinum), key_list3.index(c.name)//len(keynum2midinum)+2))
+    while keyprocEndFlag == False:
+        if midiOutChangeFlag and m.get_init() == False:
+            global midioutID
+            m.init()
+            while m.get_init() == False and keyprocEndFlag == False:
+                time.sleep(0.2)
+                print("m.get_init():"+str(m.get_init()))
+            midiout = None
+            midiout = m.Output(midioutID)
+            midiOutChangeFlag = False
+            print(midiout)
+        
+            
     
 
 def midikeypress(i,vel):
-    if (i in pressedMidiKey) == False:
+    if (i in pressedMidiKey) == False and midiOutChangeFlag == False:
         global midiout
         midiout.note_on(i, vel)
         pressedMidiKey.append(i)
 
 def midikeyrelease(i):
-    if i in pressedMidiKey:
+    if i in pressedMidiKey and midiOutChangeFlag == False:
         global midiout
         midiout.note_off(i)
         pressedMidiKey.remove(i)
+def changeMidiOutPort(portNum):
+    i_num = m.get_count()
+    for i in range(i_num):
+        #print(i)
+        #print(m.get_device_info(i))
+        print(m.get_device_info(i))
+    print("out→ "+str(portNum))
+    global midiout
+    global midioutID
+    global midiOutChangeFlag
+    for i in pressedMidiKey:
+        midikeyrelease(i)
+    midiout.close()
+    m.quit()
+    midioutID = portNum
+    midiOutChangeFlag = True
 
 COLOR_TABLE = ("light gray","gray","white","gray15")
 midiout = None
+midioutID = None
 midi_devices = []
+midi_inputdevices = []
+midi_outputdevices = []
 def main():
     global COLOR_TABLE
     global midi_devices
+    global midi_inputdevices
+    global midi_outputdevices
     print("Auto-magic MIDI Keyboard v0.1 by DIST_NOVELIST")
     # 実行UID(EUID)とUIDを確認し、
     # "0"(root)であれば管理者権限を持つ。
@@ -79,8 +118,12 @@ def main():
     i_num = m.get_count()
     for i in range(i_num):
         #print(i)
-        #print(m.get_device_info(i))
-        midi_devices.append(m.get_device_info(i)[1].decode())
+        print(m.get_device_info(i))
+        midi_devices.append(m.get_device_info(i)[1].decode()+"(input)"*m.get_device_info(i)[2]+"(output)"*m.get_device_info(i)[3])
+        if m.get_device_info(i)[2]==1:
+            midi_inputdevices.append(m.get_device_info(i)[1].decode()+"(input)")
+        if m.get_device_info(i)[3]==1:
+            midi_outputdevices.append(m.get_device_info(i)[1].decode()+"(output)")
 
     """input_id = m.get_default_input_id()
     print("input MIDI:%d" % input_id)
@@ -100,28 +143,28 @@ def main():
     #i.close()
 
     global midiout
-    midiout = m.Output(1)
-
+    global midioutID
+    midiout = m.Output(m.get_default_output_id())
+    midioutID = m.get_default_output_id()
     keyTh = threading.Thread(target=keyprocess)
     keyTh.setDaemon(True)
     keyTh.start()
 
     #tkinter
-    tk = tkinter.Tk()
+    tk = Tk()
     tk.geometry("723x200")
     tk.resizable(width=0,height=0)
     tk.title("Auto-magic MIDI Keyboard")
     tk.lift()
     tk.configure(bg=COLOR_TABLE[0])
 
-    frame = tkinter.Frame(tk)
-    frame.configure(bg=COLOR_TABLE[0])
+    frame = ttk.Frame(tk)
     frame.grid()
 
 
-    c = tkinter.Canvas(frame,width=723,height=100)
+    c = Canvas(frame,width=723,height=100)
     c.configure(bg=COLOR_TABLE[1], highlightthickness=0)
-    c.grid(row=0,column=0)
+    c.grid(columnspan=3,row=0,column=0)
 
     pressing_key = 0
     def click(event):
@@ -153,26 +196,49 @@ def main():
     c.bind('<Button-1>',click)
     c.bind('<ButtonRelease-1>',release)
 
-    label1 = tkinter.Label(frame,text="Output Port")
+    label1 = ttk.Label(frame, text="Output MIDI Port:")
     label1.grid(row=1,column=0)
-    label2 = tkinter.Label(frame,text="Velocity")
-    label2.grid(row=1,column=1)
+    cb_v=StringVar()
+    cb = ttk.Combobox(frame, textvariable=cb_v, values=midi_outputdevices, width=50, state="readonly")
+    cb.set(midi_outputdevices[0])
+    cb.bind('<<ComboboxSelected>>', lambda e: changeMidiOutPort(midi_devices.index(cb_v.get())))
+    cb.grid(row=1, column=1, columnspan=2)
 
-    v=tkinter.StringVar()
-    cb = ttk.Combobox(frame, textvariable=v, values=midi_devices, width=50)
-    cb.set(midi_devices[0])
-    cb.grid(row=2, column=0)
-    vels = ttk.Scale(frame,variable=100,orient=tkinter.HORIZONTAL,length=200,from_=0,to=255)
-    cb.grid(row=2, column=1)
+    label2 = ttk.Label(frame, text="Velocity:")
+    label2.grid(row=2,column=0)
+
+    global velocity
+    velText = StringVar()
+    label3 = ttk.Label(frame,textvariable=velText)
+    velText.set(str(velocity))
+    def SetVel(v):
+        global velocity
+        velocity = math.floor(float(v))
+        velText.set(str(velocity))
+
+    vels = ttk.Scale(frame,variable=velocity,value=velocity,orient=HORIZONTAL,length=127,from_=0,to=127,command=lambda v: SetVel(v))
+    vels.grid(row=2, column=1)
+    label3.grid(row=2,column=2)
+    def midi_dev_log():
+        global midiout
+        m.init()
+        print(m.get_init())
+        print(midiout)
+        i_num = m.get_count()
+        for i in range(i_num):
+            print(m.get_device_info(i))
+    debug_button=ttk.Button(frame,text="Show Midi Devices Information")
+    debug_button.bind('<Button-1>',lambda e:midi_dev_log())
+    debug_button.grid(row=3,column=1)
 
 
 
     
     #tkinterメインループ
     tk.mainloop()
-
+    global keyprocEndFlag
+    keyprocEndFlag=True
     keyTh.join()
-
     print("quit")
     midiout.close()
     m.quit()
