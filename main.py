@@ -9,6 +9,14 @@ import math
 notename = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
 noteoct = ["-1","0","1","2","3","4","5","6","7"]
 keynum2midinum = [0, 2, 4, 5, 7, 9, 11]
+scales =  {"Major":[0, 2, 4, 5, 7, 9, 11], 
+"Natural Minor":[0, 2, 3, 5, 7, 8, 10], 
+"All Notes":[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 
+"Harmonic Minor":[0, 2, 3, 5, 7, 8, 11], 
+"Melodic Minor":[0, 2, 3, 5, 7, 9, 11], 
+"Major Penta Tonic(ヨナ抜き長音階)":[0, 2, 4, 7, 9],
+"Major Blues":[0, 2, 3, 4, 7, 9]}
+scaleNames=["Major","Natural Minor","All Notes" , "Harmonic Minor", "Melodic Minor", "Major Penta Tonic(ヨナ抜き長音階)", "Major Blues"]
 pressedMidiKey=[]
 keyprocEndFlag = False
 midiOutChangeFlag = False
@@ -200,7 +208,7 @@ def main():
     label1 = ttk.Label(frame, text="Output MIDI Port:")
     label1.grid(row=1,column=0)
     cb_v=StringVar()
-    cb = ttk.Combobox(frame, textvariable=cb_v, values=midi_outputdevices, width=50, state="readonly")
+    cb = ttk.Combobox(frame, textvariable=cb_v, values=midi_outputdevices, width=30, state="readonly")
     cb.set(midi_outputdevices[0])
     cb.bind('<<ComboboxSelected>>', lambda e: changeMidiOutPort(midi_devices.index(cb_v.get())))
     cb.grid(row=1, column=1, columnspan=2)
@@ -220,14 +228,14 @@ def main():
     vels = ttk.Scale(frame,variable=velocity,value=velocity,orient=HORIZONTAL,length=127,from_=0,to=127,command=lambda v: SetVel(v))
     vels.grid(row=1, column=4)
     
-    label1 = ttk.Label(frame, text="Base Note:")
-    label1.grid(row=2,column=0)
+    label4 = ttk.Label(frame, text="Base Note:")
+    label4.grid(row=2,column=0)
     cbBN1_v=StringVar()
     cbBN1 = ttk.Combobox(frame, textvariable=cbBN1_v, values=notename, width=5, state="readonly")
     cbBN1.set(notename[0])
     cbBN2_v=StringVar()
     cbBN2 = ttk.Combobox(frame, textvariable=cbBN2_v, values=noteoct, width=5, state="readonly")
-    cbBN2.set(noteoct[0])
+    cbBN2.set(noteoct[5])
     def setBN():
         allMidiKeyRelease()
         global baseNote
@@ -236,6 +244,18 @@ def main():
     cbBN2.bind('<<ComboboxSelected>>', lambda e: setBN())
     cbBN1.grid(row=2, column=1)
     cbBN2.grid(row=2, column=2)
+    label5 = ttk.Label(frame, text="Scale:")
+    label5.grid(row=2,column=3)
+    global scaleNames
+    cbSc_v=StringVar()
+    cbSc = ttk.Combobox(frame, textvariable=cbSc_v, values=scaleNames, width=30, state="readonly")
+    cbSc.set(scaleNames[0])
+    def changeScale(scalename):
+        global keynum2midinum
+        allMidiKeyRelease()
+        keynum2midinum = scales[scalename]
+    cbSc.bind('<<ComboboxSelected>>', lambda e: changeScale(cbSc_v.get()))
+    cbSc.grid(row=2, column=4)
 
 
 
