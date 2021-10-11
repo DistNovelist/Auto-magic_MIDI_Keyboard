@@ -6,6 +6,7 @@ from tkinter import *
 import tkinter.ttk as ttk
 import os
 import math
+import copy
 notename = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
 noteoct = ["-1","0","1","2","3","4","5","6","7"]
 keynum2midinum = [0, 2, 4, 5, 7, 9, 11]
@@ -16,7 +17,7 @@ scales =  {"Major":[0, 2, 4, 5, 7, 9, 11],
 "Melodic Minor":[0, 2, 3, 5, 7, 9, 11], 
 "Major Penta Tonic(ヨナ抜き長音階)":[0, 2, 4, 7, 9],
 "Major Blues":[0, 2, 3, 4, 7, 9]}
-scaleNames=["Major","Natural Minor","All Notes" , "Harmonic Minor", "Melodic Minor", "Major Penta Tonic(ヨナ抜き長音階)", "Major Blues"]
+scaleNames=["Major", "Natural Minor", "All Notes", "Custom", "Harmonic Minor", "Melodic Minor", "Major Penta Tonic(ヨナ抜き長音階)", "Major Blues"]
 pressedMidiKey=[]
 keyprocEndFlag = False
 midiOutChangeFlag = False
@@ -24,16 +25,18 @@ velocity = 100
 baseNote = 60
 c=None
 black_keys = (1,3,6,8,10)
+customizeMode=False
 
 def keypress(n,deltaOct):
     global velocity
     global baseNote
-    print("velocity: " + str(velocity))
-    midikeypress(keynum2midinum[n]+12*deltaOct+baseNote, velocity)
+    if len(keynum2midinum)>0:
+        midikeypress(keynum2midinum[n]+12*deltaOct+baseNote, velocity)
 
 def keyrelease(n,deltaOct):
     global baseNote
-    midikeyrelease(keynum2midinum[n]+12*deltaOct+baseNote)
+    if len(keynum2midinum)>0:
+        midikeyrelease(keynum2midinum[n]+12*deltaOct+baseNote)
 
 def keyprocess():
     global keyprocEndFlag
@@ -46,14 +49,14 @@ def keyprocess():
     global pressedMidiKey
     pressedMidiKey = []
     for k in key_list1:
-        key.on_press_key(k, lambda c: keypress(key_list1.index(c.name)%len(keynum2midinum), key_list1.index(c.name)//len(keynum2midinum)))
-        key.on_release_key(k, lambda c: keyrelease(key_list1.index(c.name)%len(keynum2midinum), key_list1.index(c.name)//len(keynum2midinum)))
+        key.on_press_key(k, lambda c: keypress(key_list1.index(c.name)%len(keynum2midinum), key_list1.index(c.name)//len(keynum2midinum)) if len(keynum2midinum) > 0 else None)
+        key.on_release_key(k, lambda c: keyrelease(key_list1.index(c.name)%len(keynum2midinum), key_list1.index(c.name)//len(keynum2midinum)) if len(keynum2midinum) > 0 else None)
     for k in key_list2:
-        key.on_press_key(k, lambda c: keypress(key_list2.index(c.name)%len(keynum2midinum), key_list2.index(c.name)//len(keynum2midinum)+1))
-        key.on_release_key(k, lambda c: keyrelease(key_list2.index(c.name)%len(keynum2midinum), key_list2.index(c.name)//len(keynum2midinum)+1))
+        key.on_press_key(k, lambda c: keypress(key_list2.index(c.name)%len(keynum2midinum), key_list2.index(c.name)//len(keynum2midinum)+1) if len(keynum2midinum) > 0 else None)
+        key.on_release_key(k, lambda c: keyrelease(key_list2.index(c.name)%len(keynum2midinum), key_list2.index(c.name)//len(keynum2midinum)+1) if len(keynum2midinum) > 0 else None)
     for k in key_list3:
-        key.on_press_key(k, lambda c: keypress(key_list3.index(c.name)%len(keynum2midinum), key_list3.index(c.name)//len(keynum2midinum)+2))
-        key.on_release_key(k, lambda c: keyrelease(key_list3.index(c.name)%len(keynum2midinum), key_list3.index(c.name)//len(keynum2midinum)+2))
+        key.on_press_key(k, lambda c: keypress(key_list3.index(c.name)%len(keynum2midinum), key_list3.index(c.name)//len(keynum2midinum)+2) if len(keynum2midinum) > 0 else None)
+        key.on_release_key(k, lambda c: keyrelease(key_list3.index(c.name)%len(keynum2midinum), key_list3.index(c.name)//len(keynum2midinum)+2) if len(keynum2midinum) > 0 else None)
     while keyprocEndFlag == False:
         if midiOutChangeFlag and m.get_init() == False:
             global midioutID
@@ -75,7 +78,7 @@ def midikeypress(i,vel):
         global midiout
         midiout.note_on(i, vel)
         pressedMidiKey.append(i)
-        if i - (baseNote//12)*12 < 37 and i - (baseNote//12)*12 > -1:
+        if i - (baseNote//12)*12< 37 and i - (baseNote//12)*12> -1:
             global c
             global black_keys
             if i % 12 in black_keys:
@@ -90,7 +93,7 @@ def midikeyrelease(i):
         global midiout
         midiout.note_off(i)
         pressedMidiKey.remove(i)
-        if i - (baseNote//12)*12 < 37 and i - (baseNote//12)*12 > -1:
+        if i - (baseNote//12)*12< 37 and i - (baseNote//12)*12> -1:
             global c
             global black_keys
             if i % 12 in black_keys:
@@ -105,6 +108,7 @@ def allMidiKeyRelease():
         midikeyrelease(i)
 
 def changeMidiOutPort(portNum):
+    i_num = m.get_count()
     for i in range(i_num):
         #print(i)
         #print(m.get_device_info(i))
@@ -211,8 +215,18 @@ def main():
         global pressing_key
         global velocity
         if clicked:
-            pressing_key = int(c.gettags(clicked[0])[0])+baseNote
+            pressing_key = int(c.gettags(clicked[0])[0])+baseNote//12*12
             midikeypress(pressing_key,velocity)
+            if customizeMode:
+                global keynum2midinum
+                if (int(c.gettags(clicked[0])[0])-baseNote)%12 in keynum2midinum:
+                    keynum2midinum.remove((int(c.gettags(clicked[0])[0])-baseNote)%12)
+                else:
+                    keynum2midinum.append((int(c.gettags(clicked[0])[0])-baseNote)%12)
+                    keynum2midinum.sort()
+                setKeyOutline()
+
+                    
             return
     def release(event):
         global pressing_key
@@ -283,7 +297,12 @@ def main():
     def changeScale(scalename):
         allMidiKeyRelease()
         global keynum2midinum
-        keynum2midinum = scales[scalename]
+        global customizeMode
+        if scalename == "Custom":
+            customizeMode = True
+        else:
+            customizeMode = False
+            keynum2midinum = copy.copy(scales[scalename])
         setKeyOutline()
     changeScale(cbSc_v.get())
     cbSc.bind('<<ComboboxSelected>>', lambda e: changeScale(cbSc_v.get()))
