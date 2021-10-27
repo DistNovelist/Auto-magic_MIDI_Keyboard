@@ -1,3 +1,9 @@
+"""
+"Auto-magic MIDI Keyboard"
+Copyright © 2021 Karakuri Polta. All rights reserved.
+Contact: twitter @karakuri_polta
+"""
+
 import pygame.midi as m
 import time
 import keyboard as key
@@ -8,8 +14,12 @@ import os
 import math
 import copy
 notename = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
+
+#使用できるオクターブ
 noteoct = ["-1","0","1","2","3","4","5","6","7"]
+#スケールの構成音(可変)
 keynum2midinum = [0, 2, 4, 5, 7, 9, 11]
+#スケールのデータベース
 scales =  {"Major":[0, 2, 4, 5, 7, 9, 11], 
 "Natural Minor":[0, 2, 3, 5, 7, 8, 10], 
 "All Notes":[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 
@@ -17,27 +27,56 @@ scales =  {"Major":[0, 2, 4, 5, 7, 9, 11],
 "Melodic Minor":[0, 2, 3, 5, 7, 9, 11], 
 "Major Penta Tonic(ヨナ抜き長音階)":[0, 2, 4, 7, 9],
 "Major Blues":[0, 2, 3, 4, 7, 9]}
+#スケールの名前一覧(リスト用)
 scaleNames=["Major", "Natural Minor", "All Notes", "Custom", "Harmonic Minor", "Melodic Minor", "Major Penta Tonic(ヨナ抜き長音階)", "Major Blues"]
+#現在押されているMidiのキー
 pressedMidiKey=[]
+#キーの判定を終了させるフラグ
 keyprocEndFlag = False
+#MidiOutputを変更するときのフラグ
 midiOutChangeFlag = False
+#キーを押す強さ
 velocity = 100
+#ベースの音の高さ(Midiでの値)
 baseNote = 60
+#キャンバス(tkinter)
 c=None
+#黒鍵の場所
 black_keys = (1,3,6,8,10)
+#スケールをカスタマイズするフラグ
 customizeMode=False
 
+#文字のキーボードが押下されたとき
 def keypress(n,deltaOct):
     global velocity
     global baseNote
     if len(keynum2midinum)>0:
         midikeypress(keynum2midinum[n]+12*deltaOct+baseNote, velocity)
 
+#離されたとき
 def keyrelease(n,deltaOct):
     global baseNote
     if len(keynum2midinum)>0:
         midikeyrelease(keynum2midinum[n]+12*deltaOct+baseNote)
 
+#3和音用のキー(数字)が押されたとき
+def chordpress(n,deltaOct):
+    global velocity
+    global baseNote
+    if len(keynum2midinum)>0:
+        midikeypress(keynum2midinum[n]+12*deltaOct+baseNote, velocity)
+        midikeypress(keynum2midinum[(n+2)%len(keynum2midinum)]+12*(deltaOct+(n+2)//len(keynum2midinum))+baseNote, velocity)
+        midikeypress(keynum2midinum[(n+4)%len(keynum2midinum)]+12*(deltaOct+(n+4)//len(keynum2midinum))+baseNote, velocity)
+
+#離されたとき
+def chordrelease(n,deltaOct):
+    global baseNote
+    if len(keynum2midinum)>0:
+        midikeyrelease(keynum2midinum[n]+12*deltaOct+baseNote)
+        midikeyrelease(keynum2midinum[(n+2)%len(keynum2midinum)]+12*(deltaOct+(n+2)//len(keynum2midinum))+baseNote)
+        midikeyrelease(keynum2midinum[(n+4)%len(keynum2midinum)]+12*(deltaOct+(n+4)//len(keynum2midinum))+baseNote)
+
+#キー入力のスレッドの関数
 def keyprocess():
     global keyprocEndFlag
     global midiOutChangeFlag
@@ -46,6 +85,7 @@ def keyprocess():
     key_list1 = ["z","x","c","v","b","n","m",",",".","/","_"]
     key_list2 = ["a","s","d","f","g","h","j","k","l",";",":","]"]
     key_list3 = ["q","w","e","r","t","y","u","i","o","p","@","["]
+    key_list4 = ["1","2","3","4","5","6","7"]
     global pressedMidiKey
     pressedMidiKey = []
     for k in key_list1:
@@ -57,6 +97,9 @@ def keyprocess():
     for k in key_list3:
         key.on_press_key(k, lambda c: keypress(key_list3.index(c.name)%len(keynum2midinum), key_list3.index(c.name)//len(keynum2midinum)+2) if len(keynum2midinum) > 0 else None)
         key.on_release_key(k, lambda c: keyrelease(key_list3.index(c.name)%len(keynum2midinum), key_list3.index(c.name)//len(keynum2midinum)+2) if len(keynum2midinum) > 0 else None)
+    for k in key_list4:
+        key.on_press_key(k, lambda c: chordpress(key_list4.index(c.name)%len(keynum2midinum), key_list4.index(c.name)//len(keynum2midinum)) if len(keynum2midinum) > 0 else None)
+        key.on_release_key(k, lambda c: chordrelease(key_list4.index(c.name)%len(keynum2midinum), key_list4.index(c.name)//len(keynum2midinum)) if len(keynum2midinum) > 0 else None)
     while keyprocEndFlag == False:
         if midiOutChangeFlag and m.get_init() == False:
             global midioutID
@@ -71,7 +114,7 @@ def keyprocess():
         
             
     
-
+#Midiキーボードのキー入力の送信
 def midikeypress(i,vel):
     global pressedMidiKey
     if (i in pressedMidiKey) == False and midiOutChangeFlag == False:
@@ -88,7 +131,7 @@ def midikeypress(i,vel):
             else:
                 c.itemconfig(str(i - (baseNote//12)*12+1),fill=COLOR_TABLE[4])
 
-
+#Midiの離された入力の送信
 def midikeyrelease(i):
     global pressedMidiKey
     if i in pressedMidiKey and midiOutChangeFlag == False:
@@ -105,12 +148,14 @@ def midikeyrelease(i):
             else:
                 c.itemconfig(str(i - (baseNote//12)*12+1),fill=COLOR_TABLE[2])
 
+#押されているキー全てを離す
 def allMidiKeyRelease():
     global pressedMidiKey
     i_num = m.get_count()
     for i in pressedMidiKey:
         midikeyrelease(i)
 
+#Midi出力ポートを変更する
 def changeMidiOutPort(portNum):
     i_num = m.get_count()
     for i in range(i_num):
@@ -129,6 +174,7 @@ def changeMidiOutPort(portNum):
     midioutID = portNum
     midiOutChangeFlag = True
 
+#tkinterキャンバスでのキー表示の処理
 def setKeyOutline():
     global keynum2midinum
     global c
@@ -156,7 +202,7 @@ def main():
     global midi_devices
     global midi_inputdevices
     global midi_outputdevices
-    print("Auto-magic MIDI Keyboard v0.1 by DIST_NOVELIST")
+    print("Auto-magic MIDI Keyboard v0.2 by Karakuri Polta")
     # 実行UID(EUID)とUIDを確認し、
     # "0"(root)であれば管理者権限を持つ。
     if os.geteuid() == 0 and os.getuid() == 0 :
@@ -175,27 +221,14 @@ def main():
         if m.get_device_info(i)[3]==1:
             midi_outputdevices.append(m.get_device_info(i)[1].decode()+"(output)")
 
-    """input_id = m.get_default_input_id()
-    print("input MIDI:%d" % input_id)
-    i = m.Input(input_id)
-    print ("starting")
-    print ("full midi_events:[[[status,data1,data2,data3],timestamp],...]")
-
-    going = True
-    count = 0
-    while going:
-        if i.poll():
-            midi_events = i.read(10)
-            print ("full midi_events:" + str(midi_events) + ", note:" + notename[midi_events[0][0][1]%12] + str(midi_events[0][0][1]//12-2))
-            count += 1
-        if count >= 14:
-            going = False"""
-    #i.close()
-
     global midiout
     global midioutID
+
+    #Midi出力を設定
     midiout = m.Output(m.get_default_output_id())
     midioutID = m.get_default_output_id()
+
+    #キー入力での送信を行うスレッドの実行
     keyTh = threading.Thread(target=keyprocess)
     keyTh.setDaemon(True)
     keyTh.start()
@@ -204,7 +237,7 @@ def main():
     tk = Tk()
     tk.geometry("723x200")
     tk.resizable(width=0,height=0)
-    tk.title("Auto-magic MIDI Keyboard")
+    tk.title("Auto-magic MIDI Keyboard v0.2")
     tk.lift()
     tk.configure(bg=COLOR_TABLE[0])
 
@@ -217,6 +250,8 @@ def main():
     c.grid(columnspan=6,row=0,column=0)
 
     pressing_key = 0
+
+    #キャンバスクリック
     def click(event):
         clicked = [
             obj for obj in c.find_overlapping(event.x-1, event.y+1,event.x+1,event.y-1)
@@ -246,6 +281,7 @@ def main():
 
     global baseNote
 
+    #黒鍵表示処理
     global black_keys
     for i in range(36):
         if i%12 in black_keys:
@@ -257,6 +293,7 @@ def main():
     c.bind('<Button-1>',click)
     c.bind('<ButtonRelease-1>',release)
 
+    #UI設定
     label1 = ttk.Label(frame, text="Output MIDI Port:")
     label1.grid(row=1,column=0)
     cb_v=StringVar()
@@ -323,6 +360,8 @@ def main():
     
     #tkinterメインループ
     tk.mainloop()
+
+    #終了処理
     global keyprocEndFlag
     keyprocEndFlag=True
     keyTh.join()
