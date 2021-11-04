@@ -1,0 +1,22 @@
+{
+  "name": "auto-magic_midi_keyboard",
+  "version": "1.0.0",
+  "description": "Customizable virtual MIDI keyboard. Copyright (c) Karakuri Polta All rights reserved.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DistNovelist/Auto-magic_MIDI_Keyboard.git"
+  },
+  "author": "Karakuri Polta",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DistNovelist/Auto-magic_MIDI_Keyboard/issues"
+  },
+  "homepage": "https://github.com/DistNovelist/Auto-magic_MIDI_Keyboard#readme",
+  "dependencies": {
+    "request": "^2.88.2"
+  }
+}
