@@ -5,6 +5,7 @@ const {app, BrowserWindow} = require('electron');
 let mainWindow;
 
 function createWindow() {
+  app.allowRendererProcessReuse = false;
   // メインウィンドウを作成します
   mainWindow = new BrowserWindow({
     webPreferences: {
