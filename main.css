@@ -101,6 +101,12 @@ div{
 .piano_key_black.scale{
     background-color: saddlebrown;
 }
+.piano_key.base{
+    border-color: indianred;
+}
+.piano_key_black.base{
+    border-color: maroon;
+}
 body{
     user-select: none;
 }

@@ -89,6 +89,12 @@ function indicateScaleKeys() {
     console.log("indicate scale keys");
     console.log(scale);
     for(let i=0; i<128; i++){
+        if(i == baseNote){
+            $("#"+i.toString()).addClass("base");
+        }
+        else if($("#"+i.toString()).attr("class").split(' ').includes("base")){
+                $("#"+i.toString()).removeClass("base");
+        }
         if(scale.includes((i-baseNote%12+12)%12)){
             $("#"+i.toString()).addClass("scale");
         }else{
