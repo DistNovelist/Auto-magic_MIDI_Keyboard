@@ -1,3 +1,5 @@
+const { forEach } = require('lodash');
+
 var midi = null;
 var input_devices = [];
 var output_devices = [];
@@ -110,7 +112,16 @@ function keyMouseReleased(){
 
 var keynames = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 var blackkeys = [1,3,6,8,10];
-var scale = [0, 2, 3, 5, 7, 8, 10];
+var scale = [0, 2, 4, 5, 7, 9, 11];
+var scales = [
+    {name: "Major", scale:[0, 2, 4, 5, 7, 9, 11]},
+    {name: "Natural Minor", scale:[0, 2, 3, 5, 7, 8, 10]},
+    {name: "All Notes", scale:[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]},
+    {name: "Harmonic Minor", scale:[0, 2, 3, 5, 7, 8, 11]},
+    {name: "Melodic Minor", scale:[0, 2, 3, 5, 7, 9, 11]},
+    {name: "Major Penta Tonic", scale:[0, 2, 4, 7, 9]},
+    {name: "Major Blues", scale:[0, 2, 3, 4, 7, 9]}
+]
 var baseNote = 60;
 var velocity = 100;
 $(function(){
@@ -143,5 +154,15 @@ $(function(){
     $('[name=velocity]').on("input", function(){
         velocity = parseInt($("[name=velocity]").val());
         $("#velocity_indicator").text(velocity.toString());
+    });
+
+    //スケールリストの更新
+    scales.forEach(element => {
+        console.log(element);
+        $("[name=scale]").append($('<option>').html(element.name).val(scales.indexOf(element).toString()));
+    });
+    $("[name=scale]").on("change",function () {
+        scale = scales[parseInt($("[name=scale]").val())].scale;
+        indicateScaleKeys();
     });
 });
