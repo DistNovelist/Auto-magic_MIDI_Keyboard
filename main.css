@@ -95,11 +95,11 @@ div{
     display:table-cell;
     vertical-align:top;
 }
-.piano_key .scale{
-    background-color: khaki;
+.piano_key.scale{
+    background-color: wheat;
 }
-.piano_key_black .scale{
-    background-color: rosybrown;
+.piano_key_black.scale{
+    background-color: saddlebrown;
 }
 body{
     user-select: none;

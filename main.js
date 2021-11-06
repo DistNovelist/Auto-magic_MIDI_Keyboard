@@ -41,11 +41,7 @@ function MidiNoteOff(note){
     if(output_devices.length > 0){
         console.log("note off")
         output_devices[0].send([0x90,note,0x00]);
-        if($("#"+note.toString()).attr("class")=="piano_key"){
-            $("#"+note.toString()).css("background-color","white");
-        }else{
-            $("#"+note.toString()).css("background-color","rgb(37,37,37)");
-        }
+        $("#"+note.toString()).css("background-color","");
     }
 }
 
@@ -86,7 +82,17 @@ document.addEventListener('keyup', (event) => {
     }
 });
 
-
+function indicateScaleKeys() {
+    console.log("indicate scale keys");
+    console.log(scale);
+    for(let i=0; i<128; i++){
+        if(scale.includes(i%12)){
+            $("#"+i.toString()).addClass("scale");
+        }else{
+            $("#"+i.toString()).removeClass("scale");
+        }
+    }
+}
 
 mousePressedKeys=[];
 function keyMousePressed(e){
@@ -103,7 +109,7 @@ function keyMouseReleased(){
 
 var keynames = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 var blackkeys = [1,3,6,8,10];
-var scale = [0, 2, 4, 5, 7, 9, 11]
+var scale = [0, 2, 3, 5, 7, 8, 10]
 $(function(){
     //GUでのピアノキーの生成
     for(let i = 0; i<128; i++){
@@ -118,5 +124,5 @@ $(function(){
         //キーが離されたときの処理
         $("#"+i.toString()).on("mouseup",keyMouseReleased);
     }
-    
+    indicateScaleKeys();
 });
