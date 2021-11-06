@@ -127,6 +127,27 @@ function keyMousePressed(e){
     noteNum = e.data.note;
     MidiNoteOn(noteNum,100);
     mousePressedKeys.push(noteNum);
+    //スケールのカスタマイズ
+    if(customize_mode){
+        if(scale.includes((noteNum-baseNote+108)%12)){
+            scale.splice(scale.indexOf((noteNum-baseNote+108)%12),1);
+        }else{
+            if(scale.length==0){
+                scale.push((noteNum-baseNote+108)%12);
+            }else{
+                for(let i = 0; i<scale.length; i++){
+                    if(scale[i]>(noteNum-baseNote+108)%12){
+                        scale.splice(i,0,(noteNum-baseNote+108)%12);
+                        break;
+                    }
+                }
+                if(!scale.includes((noteNum-baseNote+108)%12)){
+                    scale.push((noteNum-baseNote+108)%12);
+                }
+            }
+        }
+        indicateScaleKeys();
+    }
 }
 function keyMouseReleased(){
     mousePressedKeys.forEach(e => {
@@ -149,6 +170,7 @@ var scales = [
 ]
 var baseNote = 60;
 var velocity = 100;
+var customize_mode = false;
 $(function(){
     //GUでのピアノキーの生成
     for(let i = 0; i<128; i++){
@@ -192,4 +214,7 @@ $(function(){
         scale = scales[parseInt($("[name=scale]").val())].scale;
         indicateScaleKeys();
     });
+    $("[name=customize]").on("change",function(){
+        customize_mode = $("[name=customize]").prop("checked");
+    })
 });
