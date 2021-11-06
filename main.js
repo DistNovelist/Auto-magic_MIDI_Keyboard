@@ -57,11 +57,11 @@ document.addEventListener('keydown', (event) => {
     //文字キーが押されたときの反応(A,B,C,……)
     if(!pressed_keys.includes(keyName) && scale.length>0){
         if(keys1.indexOf(keyName)>-1){
-            MidiNoteOn(72+12*Math.floor(keys1.indexOf(keyName)/scale.length)+scale[keys1.indexOf(keyName)%scale.length],100);
+            MidiNoteOn(baseNote+12+12*Math.floor(keys1.indexOf(keyName)/scale.length)+scale[keys1.indexOf(keyName)%scale.length],100);
         }else if(keys2.indexOf(keyName)>-1){
-            MidiNoteOn(60+12*Math.floor(keys2.indexOf(keyName)/scale.length)+scale[keys2.indexOf(keyName)%scale.length],100);
+            MidiNoteOn(baseNote+12*Math.floor(keys2.indexOf(keyName)/scale.length)+scale[keys2.indexOf(keyName)%scale.length],100);
         }else if(keys3.indexOf(keyName)>-1){
-            MidiNoteOn(48+12*Math.floor(keys3.indexOf(keyName)/scale.length)+scale[keys3.indexOf(keyName)%scale.length],100);
+            MidiNoteOn(baseNote-12+12*Math.floor(keys3.indexOf(keyName)/scale.length)+scale[keys3.indexOf(keyName)%scale.length],100);
         }
         pressed_keys.push(keyName);
     }
@@ -72,21 +72,22 @@ document.addEventListener('keyup', (event) => {
     //文字キーが押されたときの反応(A,B,C,……)
     if(scale.length>0){
         if(keys1.indexOf(keyName)>-1){
-            MidiNoteOff(72+12*Math.floor(keys1.indexOf(keyName)/scale.length)+scale[keys1.indexOf(keyName)%scale.length]);
+            MidiNoteOff(baseNote+12+12*Math.floor(keys1.indexOf(keyName)/scale.length)+scale[keys1.indexOf(keyName)%scale.length]);
         }else if(keys2.indexOf(keyName)>-1){
-            MidiNoteOff(60+12*Math.floor(keys2.indexOf(keyName)/scale.length)+scale[keys2.indexOf(keyName)%scale.length]);
+            MidiNoteOff(baseNote+12*Math.floor(keys2.indexOf(keyName)/scale.length)+scale[keys2.indexOf(keyName)%scale.length]);
         }else if(keys3.indexOf(keyName)>-1){
-            MidiNoteOff(48+12*Math.floor(keys3.indexOf(keyName)/scale.length)+scale[keys3.indexOf(keyName)%scale.length]);
+            MidiNoteOff(baseNote-12+12*Math.floor(keys3.indexOf(keyName)/scale.length)+scale[keys3.indexOf(keyName)%scale.length]);
         }
         pressed_keys.splice(pressed_keys.indexOf(keyName),1);
     }
 });
 
+//スケールのキーを表示させる更新処理
 function indicateScaleKeys() {
     console.log("indicate scale keys");
     console.log(scale);
     for(let i=0; i<128; i++){
-        if(scale.includes(i%12)){
+        if(scale.includes((i-baseNote%12+12)%12)){
             $("#"+i.toString()).addClass("scale");
         }else{
             $("#"+i.toString()).removeClass("scale");
@@ -110,6 +111,7 @@ function keyMouseReleased(){
 var keynames = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 var blackkeys = [1,3,6,8,10];
 var scale = [0, 2, 3, 5, 7, 8, 10]
+var baseNote = 60;
 $(function(){
     //GUでのピアノキーの生成
     for(let i = 0; i<128; i++){
@@ -121,8 +123,18 @@ $(function(){
         }
         //キーがマウスで押されたときの処理
         $("#"+i.toString()).on("mousedown",{note: i},keyMousePressed);
-        //キーが離されたときの処理
+        //キーがマウスのクリックから離されたときの処理
         $("#"+i.toString()).on("mouseup",keyMouseReleased);
     }
-    indicateScaleKeys();
+    //スクロール初期位置(C3らへん)
+    $("#piano-wrapper").scrollLeft(1500);
+
+    //基本音取得・表示変更
+    function applyBaseNoteChange(){
+        baseNote = parseInt($('[name=Base-Oct]').val())*12+24+keynames.indexOf($('[name=Base-Alpha]').val())
+        indicateScaleKeys();
+    }
+    applyBaseNoteChange();
+    $('[name=Base-Oct]').on("change",applyBaseNoteChange);
+    $('[name=Base-Alpha]').on("change",applyBaseNoteChange);
 });
