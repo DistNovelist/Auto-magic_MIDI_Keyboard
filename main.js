@@ -59,13 +59,13 @@ document.addEventListener('keydown', (event) => {
     var keyName = event.key;
     console.log(keyName+" pressed");
     //文字キーが押されたときの反応(A,B,C,……)
-    if(!pressed_keys.includes(keyName)){
+    if(!pressed_keys.includes(keyName) && scale.length>0){
         if(keys1.indexOf(keyName)>-1){
-            MidiNoteOn(72+keys1.indexOf(keyName),100);
+            MidiNoteOn(72+12*Math.floor(keys1.indexOf(keyName)/scale.length)+scale[keys1.indexOf(keyName)%scale.length],100);
         }else if(keys2.indexOf(keyName)>-1){
-            MidiNoteOn(60+keys2.indexOf(keyName),100);
+            MidiNoteOn(60+12*Math.floor(keys2.indexOf(keyName)/scale.length)+scale[keys2.indexOf(keyName)%scale.length],100);
         }else if(keys3.indexOf(keyName)>-1){
-            MidiNoteOn(48+keys3.indexOf(keyName),100);
+            MidiNoteOn(48+12*Math.floor(keys3.indexOf(keyName)/scale.length)+scale[keys3.indexOf(keyName)%scale.length],100);
         }
         pressed_keys.push(keyName);
     }
@@ -74,14 +74,16 @@ document.addEventListener('keyup', (event) => {
     var keyName = event.key;
     console.log(keyName+" released");
     //文字キーが押されたときの反応(A,B,C,……)
-    if(keys1.indexOf(keyName)>-1){
-        MidiNoteOff(72+keys1.indexOf(keyName));
-    }else if(keys2.indexOf(keyName)>-1){
-        MidiNoteOff(60+keys2.indexOf(keyName));
-    }else if(keys3.indexOf(keyName)>-1){
-        MidiNoteOff(48+keys3.indexOf(keyName));
+    if(scale.length>0){
+        if(keys1.indexOf(keyName)>-1){
+            MidiNoteOff(72+12*Math.floor(keys1.indexOf(keyName)/scale.length)+scale[keys1.indexOf(keyName)%scale.length]);
+        }else if(keys2.indexOf(keyName)>-1){
+            MidiNoteOff(60+12*Math.floor(keys2.indexOf(keyName)/scale.length)+scale[keys2.indexOf(keyName)%scale.length]);
+        }else if(keys3.indexOf(keyName)>-1){
+            MidiNoteOff(48+12*Math.floor(keys3.indexOf(keyName)/scale.length)+scale[keys3.indexOf(keyName)%scale.length]);
+        }
+        pressed_keys.splice(pressed_keys.indexOf(keyName),1);
     }
-    pressed_keys.splice(pressed_keys.indexOf(keyName),1);
 });
 
 
