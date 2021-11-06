@@ -57,11 +57,11 @@ document.addEventListener('keydown', (event) => {
     //文字キーが押されたときの反応(A,B,C,……)
     if(!pressed_keys.includes(keyName) && scale.length>0){
         if(keys1.indexOf(keyName)>-1){
-            MidiNoteOn(baseNote+12+12*Math.floor(keys1.indexOf(keyName)/scale.length)+scale[keys1.indexOf(keyName)%scale.length],100);
+            MidiNoteOn(baseNote+12+12*Math.floor(keys1.indexOf(keyName)/scale.length)+scale[keys1.indexOf(keyName)%scale.length],velocity);
         }else if(keys2.indexOf(keyName)>-1){
-            MidiNoteOn(baseNote+12*Math.floor(keys2.indexOf(keyName)/scale.length)+scale[keys2.indexOf(keyName)%scale.length],100);
+            MidiNoteOn(baseNote+12*Math.floor(keys2.indexOf(keyName)/scale.length)+scale[keys2.indexOf(keyName)%scale.length],velocity);
         }else if(keys3.indexOf(keyName)>-1){
-            MidiNoteOn(baseNote-12+12*Math.floor(keys3.indexOf(keyName)/scale.length)+scale[keys3.indexOf(keyName)%scale.length],100);
+            MidiNoteOn(baseNote-12+12*Math.floor(keys3.indexOf(keyName)/scale.length)+scale[keys3.indexOf(keyName)%scale.length],velocity);
         }
         pressed_keys.push(keyName);
     }
@@ -110,8 +110,9 @@ function keyMouseReleased(){
 
 var keynames = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 var blackkeys = [1,3,6,8,10];
-var scale = [0, 2, 3, 5, 7, 8, 10]
+var scale = [0, 2, 3, 5, 7, 8, 10];
 var baseNote = 60;
+var velocity = 100;
 $(function(){
     //GUでのピアノキーの生成
     for(let i = 0; i<128; i++){
@@ -137,4 +138,10 @@ $(function(){
     applyBaseNoteChange();
     $('[name=Base-Oct]').on("change",applyBaseNoteChange);
     $('[name=Base-Alpha]').on("change",applyBaseNoteChange);
+
+    //ベロシティ変更
+    $('[name=velocity]').on("input", function(){
+        velocity = parseInt($("[name=velocity]").val());
+        $("#velocity_indicator").text(velocity.toString());
+    });
 });
