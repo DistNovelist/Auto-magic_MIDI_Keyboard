@@ -26,9 +26,10 @@ function onMIDISuccess(m){
     console.log(output_devices);
 }
 
+pressed_midi_keys = [];
 //MIDIノート信号送信
 function MidiNoteOn(note, vel){
-    if(output_devices.length > 0){
+    if(output_devices.length > 0 && !pressed_keys.includes(note)){
         console.log("note on")
         output_devices[0].send([0x90,note,vel]);
         if($("#"+note.toString()).attr("class")=="piano_key"){
@@ -36,21 +37,24 @@ function MidiNoteOn(note, vel){
         }else{
             $("#"+note.toString()).css("background-color","dimgray");
         }
+        pressed_midi_keys.push(note);
     }
 }
 //MIDIノートオフ信号送信
 function MidiNoteOff(note){
-    if(output_devices.length > 0){
+    if(output_devices.length > 0 && pressed_midi_keys.includes(note)){
         console.log("note off")
         output_devices[0].send([0x90,note,0x00]);
         $("#"+note.toString()).css("background-color","");
+        pressed_midi_keys.splice(pressed_midi_keys.indexOf(note),1);
     }
 }
 
 
-var keys1 = ["q","w","e","r","t","y","u","i","o","P","@","["]
-var keys2 = ["a","s","d","f","g","h","j","k","l",";",":","]"]
-var keys3 = ["z","x","c","v","b","n","m",",",".","/","_"]
+var keys1 = ["q","w","e","r","t","y","u","i","o","P","@","["];
+var keys2 = ["a","s","d","f","g","h","j","k","l",";",":","]"];
+var keys3 = ["z","x","c","v","b","n","m",",",".","/","_"];
+var chordkeys = ["1","2","3","4","5","6","7"];
 pressed_keys=[]
 //文字のキー入力
 document.addEventListener('keydown', (event) => {
@@ -64,6 +68,10 @@ document.addEventListener('keydown', (event) => {
             MidiNoteOn(baseNote+12*Math.floor(keys2.indexOf(keyName)/scale.length)+scale[keys2.indexOf(keyName)%scale.length],velocity);
         }else if(keys3.indexOf(keyName)>-1){
             MidiNoteOn(baseNote-12+12*Math.floor(keys3.indexOf(keyName)/scale.length)+scale[keys3.indexOf(keyName)%scale.length],velocity);
+        }else if(chordkeys.includes(keyName)){
+            MidiNoteOn(baseNote+12*Math.floor((parseInt(keyName)-1)/scale.length)+scale[(parseInt(keyName)-1)%scale.length],velocity);
+            MidiNoteOn(baseNote+12*Math.floor((parseInt(keyName)+1)/scale.length)+scale[(parseInt(keyName)+1)%scale.length],velocity);
+            MidiNoteOn(baseNote+12*Math.floor((parseInt(keyName)+3)/scale.length)+scale[(parseInt(keyName)+3)%scale.length],velocity);
         }
         pressed_keys.push(keyName);
     }
@@ -79,10 +87,21 @@ document.addEventListener('keyup', (event) => {
             MidiNoteOff(baseNote+12*Math.floor(keys2.indexOf(keyName)/scale.length)+scale[keys2.indexOf(keyName)%scale.length]);
         }else if(keys3.indexOf(keyName)>-1){
             MidiNoteOff(baseNote-12+12*Math.floor(keys3.indexOf(keyName)/scale.length)+scale[keys3.indexOf(keyName)%scale.length]);
+        }else if(chordkeys.includes(keyName)){
+            MidiNoteOff(baseNote+12*Math.floor((parseInt(keyName)-1)/scale.length)+scale[(parseInt(keyName)-1)%scale.length]);
+            MidiNoteOff(baseNote+12*Math.floor((parseInt(keyName)+1)/scale.length)+scale[(parseInt(keyName)+1)%scale.length]);
+            MidiNoteOff(baseNote+12*Math.floor((parseInt(keyName)+3)/scale.length)+scale[(parseInt(keyName)+3)%scale.length]);
         }
         pressed_keys.splice(pressed_keys.indexOf(keyName),1);
     }
 });
+
+function allKeyRelease(){
+    pressed_midi_keys.forEach(element => {
+        MidiNoteOff(element);
+    });
+    pressed_midi_keys=[];
+}
 
 //スケールのキーを表示させる更新処理
 function indicateScaleKeys() {
@@ -149,6 +168,7 @@ $(function(){
 
     //基本音取得・表示変更
     function applyBaseNoteChange(){
+        allKeyRelease();
         baseNote = parseInt($('[name=Base-Oct]').val())*12+24+keynames.indexOf($('[name=Base-Alpha]').val())
         indicateScaleKeys();
     }
@@ -168,6 +188,7 @@ $(function(){
         $("[name=scale]").append($('<option>').html(element.name).val(scales.indexOf(element).toString()));
     });
     $("[name=scale]").on("change",function () {
+        allKeyRelease();
         scale = scales[parseInt($("[name=scale]").val())].scale;
         indicateScaleKeys();
     });
