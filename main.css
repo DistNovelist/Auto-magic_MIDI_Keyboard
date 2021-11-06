@@ -95,3 +95,6 @@ div{
     display:table-cell;
     vertical-align:top;
 }
+body{
+    user-select: none;
+}
