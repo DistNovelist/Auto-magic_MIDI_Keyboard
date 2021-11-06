@@ -211,7 +211,7 @@ $(function(){
     });
     $("[name=scale]").on("change",function () {
         allKeyRelease();
-        scale = scales[parseInt($("[name=scale]").val())].scale;
+        scale = scales[parseInt($("[name=scale]").val())].scale.slice();
         indicateScaleKeys();
     });
     $("[name=customize]").on("change",function(){
