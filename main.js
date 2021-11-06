@@ -29,6 +29,11 @@ function MidiNoteOn(note, vel){
     if(output_devices.length > 0){
         console.log("note on")
         output_devices[0].send([0x90,note,vel]);
+        if($("#"+note.toString()).attr("class")=="piano_key"){
+            $("#"+note.toString()).css("background-color","gray");
+        }else{
+            $("#"+note.toString()).css("background-color","dimgray");
+        }
     }
 }
 //MIDIノートオフ信号送信
@@ -36,6 +41,11 @@ function MidiNoteOff(note){
     if(output_devices.length > 0){
         console.log("note off")
         output_devices[0].send([0x90,note,0x00]);
+        if($("#"+note.toString()).attr("class")=="piano_key"){
+            $("#"+note.toString()).css("background-color","white");
+        }else{
+            $("#"+note.toString()).css("background-color","rgb(37,37,37)");
+        }
     }
 }
 mousePressedKeys=[];
