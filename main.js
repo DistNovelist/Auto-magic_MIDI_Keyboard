@@ -48,6 +48,44 @@ function MidiNoteOff(note){
         }
     }
 }
+
+
+var keys1 = ["q","w","e","r","t","y","u","i","o","P","@","["]
+var keys2 = ["a","s","d","f","g","h","j","k","l",";",":","]"]
+var keys3 = ["z","x","c","v","b","n","m",",",".","/","_"]
+pressed_keys=[]
+//文字のキー入力
+document.addEventListener('keydown', (event) => {
+    var keyName = event.key;
+    console.log(keyName+" pressed");
+    //文字キーが押されたときの反応(A,B,C,……)
+    if(!pressed_keys.includes(keyName)){
+        if(keys1.indexOf(keyName)>-1){
+            MidiNoteOn(72+keys1.indexOf(keyName),100);
+        }else if(keys2.indexOf(keyName)>-1){
+            MidiNoteOn(60+keys2.indexOf(keyName),100);
+        }else if(keys3.indexOf(keyName)>-1){
+            MidiNoteOn(48+keys3.indexOf(keyName),100);
+        }
+        pressed_keys.push(keyName);
+    }
+});
+document.addEventListener('keyup', (event) => {
+    var keyName = event.key;
+    console.log(keyName+" released");
+    //文字キーが押されたときの反応(A,B,C,……)
+    if(keys1.indexOf(keyName)>-1){
+        MidiNoteOff(72+keys1.indexOf(keyName));
+    }else if(keys2.indexOf(keyName)>-1){
+        MidiNoteOff(60+keys2.indexOf(keyName));
+    }else if(keys3.indexOf(keyName)>-1){
+        MidiNoteOff(48+keys3.indexOf(keyName));
+    }
+    pressed_keys.splice(pressed_keys.indexOf(keyName),1);
+});
+
+
+
 mousePressedKeys=[];
 function keyMousePressed(e){
     noteNum = e.data.note;
@@ -63,6 +101,7 @@ function keyMouseReleased(){
 
 var keynames = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 var blackkeys = [1,3,6,8,10];
+var scale = [0, 2, 4, 5, 7, 9, 11]
 $(function(){
     //GUでのピアノキーの生成
     for(let i = 0; i<128; i++){
