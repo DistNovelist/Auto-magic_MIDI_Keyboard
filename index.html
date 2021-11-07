@@ -25,6 +25,9 @@
     </div>
     <div id="settings">
         Velocity <input type="range" name="velocity" id="vel_set" min="1" max="127" step="1" value="100"> <span id="velocity_indicator">100</span>
+        <br>Output Port: <select name="midiout">
+            <option value="-1" selected disabled>None</option>
+        </select>
         <br>Base Note: <select name="Base-Alpha">
             <option value="C" selected>C</option>
             <option value="C#">C#</option>
@@ -51,7 +54,8 @@
             <option value="6">6</option>
         </select>
         <br>Scale: 
-        <select name="scale"></select>
+        <select name="scale"></select> 
+        <button name="scale_save">Save Scale As...</button>
         <br>Scale Cusomize Mode: <input type="checkbox" name="customize">
     </div>
 </body>

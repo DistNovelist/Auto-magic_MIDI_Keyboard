@@ -1,6 +1,7 @@
 const { forEach } = require('lodash');
 
 var midi = null;
+var midiout = null;
 var input_devices = [];
 var output_devices = [];
 
@@ -10,6 +11,7 @@ jQuery = $ = require('jquery');
 navigator.requestMIDIAccess().then(onMIDISuccess,onMIDIFailure);
 function onMIDIFailure(msg){
     console.log("onMIDIFailure(): "+msg);
+    window.alert("[エラー]MIDIへのアクセスに失敗しました。");
 }
 function onMIDISuccess(m){
     midi=m;
@@ -29,9 +31,9 @@ function onMIDISuccess(m){
 pressed_midi_keys = [];
 //MIDIノート信号送信
 function MidiNoteOn(note, vel){
-    if(output_devices.length > 0 && !pressed_keys.includes(note)){
+    if(midiout != null && !pressed_keys.includes(note)){
         console.log("note on")
-        output_devices[0].send([0x90,note,vel]);
+        midiout.send([0x90,note,vel]);
         if($("#"+note.toString()).attr("class")=="piano_key"){
             $("#"+note.toString()).css("background-color","gray");
         }else{
@@ -42,9 +44,9 @@ function MidiNoteOn(note, vel){
 }
 //MIDIノートオフ信号送信
 function MidiNoteOff(note){
-    if(output_devices.length > 0 && pressed_midi_keys.includes(note)){
+    if(midiout != null && pressed_midi_keys.includes(note)){
         console.log("note off")
-        output_devices[0].send([0x90,note,0x00]);
+        midiout.send([0x90,note,0x00]);
         $("#"+note.toString()).css("background-color","");
         pressed_midi_keys.splice(pressed_midi_keys.indexOf(note),1);
     }
@@ -217,4 +219,44 @@ $(function(){
     $("[name=customize]").on("change",function(){
         customize_mode = $("[name=customize]").prop("checked");
     })
+
+    //midi出力リストの設定
+    if(output_devices.length==0){
+        console.log("waiting for applying output devices...");
+        //MIDI出力の設定が正常にされるまで待つ
+        timeout_i = 0;
+        const intervalID = setInterval(function(){
+            console.log(output_devices.length);
+            if(output_devices.length == 0){
+                if(i>6){
+                    //タイムアウト
+                    alert("[エラー]タイムアウトしました。利用可能なMIDI出力ポートがない可能性があります。");
+                }else{
+                    //ループ続行
+                    i++
+                    console.log("continue waiting...");
+                    return;
+                }
+            }else{
+                //outputリストの設定
+                for(let i=0; i<output_devices.length; i++){
+                    console.log(output_devices[i]);
+                    $("[name=midiout]").append($('<option>').html(output_devices[i].name).val(output_devices.indexOf(output_devices[i]).toString()));
+                }
+                $("[name=midiout] option[value='0']").prop("selected",true);
+                midiout = output_devices[0];
+                $("[name=midiout]").on("change",function () {
+                    allKeyRelease();
+                    midiout = output_devices[parseInt($("[name=midiout]").val())];
+                });
+                clearInterval(intervalID);
+            }
+        },500);
+    }
+    
+    //select要素のフォーカスを自動で解除
+    const selects = document.querySelectorAll('select');
+    for (const select of selects) {
+        select.onfocus = (e) => e.target.blur();
+    }
 });
