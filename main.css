@@ -107,6 +107,16 @@ div{
 .piano_key_black.base{
     border-color: maroon;
 }
+.menubutton{
+    opacity: 1;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    -o-transition: all 0.2s ease;
+    transition: all  0.2s ease;
+}
+.menubutton:hover{
+    opacity: 0.5;
+}
 body{
     user-select: none;
 }

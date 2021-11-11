@@ -1,3 +1,4 @@
+const { shell } = require('electron');
 const { forEach } = require('lodash');
 
 var midi = null;
@@ -174,6 +175,11 @@ var baseNote = 60;
 var velocity = 100;
 var customize_mode = false;
 $(function(){
+    //コンタクトボタン
+    $(".contact").on("click",function(){
+        shell.openExternal("https://twitter.com/Karakuri_Polta")
+    });
+
     //GUでのピアノキーの生成
     for(let i = 0; i<128; i++){
         //白黒の色を分ける
