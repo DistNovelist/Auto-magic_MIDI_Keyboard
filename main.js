@@ -54,7 +54,7 @@ function MidiNoteOff(note){
 }
 
 
-var keys1 = ["q","w","e","r","t","y","u","i","o","P","@","["];
+var keys1 = ["q","w","e","r","t","y","u","i","o","p","@","["];
 var keys2 = ["a","s","d","f","g","h","j","k","l",";",":","]"];
 var keys3 = ["z","x","c","v","b","n","m",",",".","/","_"];
 var chordkeys = ["1","2","3","4","5","6","7"];
@@ -170,14 +170,39 @@ var scales = [
     {name: "Melodic Minor", scale:[0, 2, 3, 5, 7, 9, 11]},
     {name: "Major Penta Tonic", scale:[0, 2, 4, 7, 9]},
     {name: "Major Blues", scale:[0, 2, 3, 4, 7, 9]}
-]
+];
 var baseNote = 60;
 var velocity = 100;
 var customize_mode = false;
 $(function(){
     //コンタクトボタン
     $(".contact").on("click",function(){
-        shell.openExternal("https://twitter.com/Karakuri_Polta")
+        shell.openExternal("https://twitter.com/Karakuri_Polta");
+    });
+
+    //save presetボタン
+    $(".save").on("click",function(){
+        const a = document.createElement('a');
+        a.href = 'data:text/plain,' + encodeURIComponent(JSON.stringify(scales));
+        a.download = 'scale-preset.json';
+        a.click();
+    });
+
+    //load presetボタン
+    var reader = new FileReader();
+    reader.onload = function(event) {
+        console.log(event.target.result);
+        scales = JSON.parse(event.target.result);
+        $("[name=scale]").html("");
+        scales.forEach(element => {
+            
+            $("[name=scale]").append($('<option>').html(element.name).val(scales.indexOf(element).toString()));
+        });
+    };
+    $(".load").on("click",function(){
+        $('<input type="file" accept=".json, text/plain">').on('change', function(event) {
+            reader.readAsText(event.target.files[0]);
+        })[0].click();
     });
 
     //GUでのピアノキーの生成
@@ -265,4 +290,11 @@ $(function(){
     for (const select of selects) {
         select.onfocus = (e) => e.target.blur();
     }
+    $("[name=scale_save]").on("click",function () {
+        tmpname = $("#saveScaleName").val();
+        if(tmpname != ""){
+        scales.push({name: tmpname, scale: scale});
+        $("[name=scale]").append($('<option>').html(tmpname).val((scales.length-1).toString()));
+    }
+    });
 });
