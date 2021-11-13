@@ -22,7 +22,10 @@
     "request": "^2.88.2"
   },
   "devDependencies": {
-    "electron-builder": "^22.13.1"
+    "electron-builder": "^22.13.1",
+    "electron": "^15.3.0",
+    "jquery": "^3.6.0",
+    "request": "^2.88.2"
   },
   "build": {
     "appId": "com.polta.automidikey",
