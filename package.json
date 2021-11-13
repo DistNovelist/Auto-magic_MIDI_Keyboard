@@ -1,7 +1,7 @@
 {
   "name": "auto-magic_midi_keyboard",
   "version": "1.0.0",
-  "description": "Customizable virtual MIDI keyboard. Copyright (c) Karakuri Polta All rights reserved.",
+  "description": "Customizable virtual MIDI keyboard. Copyright (c) 2021 Karakuri Polta All rights reserved.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -23,5 +23,12 @@
   },
   "devDependencies": {
     "electron-builder": "^22.13.1"
+  },
+  "build": {
+    "appId": "com.polta.automidikey",
+    "productName": "Auto-magic MIDI Keyboard",
+    "files": [
+      "./*"
+    ]
   }
 }
